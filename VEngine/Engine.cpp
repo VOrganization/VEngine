@@ -842,7 +842,7 @@ void Engine::Update(){
 				m->ambient = this->scene->Materials->at(i)->ambient;
 				m->diffuse = this->scene->Materials->at(i)->diffuse;
 				m->specular = this->scene->Materials->at(i)->specular;
-				m->shininess.x = this->scene->Materials->at(i)->shininess;
+				m->shininess.x = 32.0f;
 			}
 
 			void* data;
@@ -937,6 +937,55 @@ void Engine::Update(){
 			vkMapMemory(this->context->GetDevice(), this->lightSpotUBOBufferMemory, 0, bufferSize, 0, &data);
 			memcpy(data, this->lightSpotUBOData, bufferSize);
 			vkUnmapMemory(this->context->GetDevice(), this->lightSpotUBOBufferMemory);
+		}
+	}
+
+	//Calc light dir data
+	{
+		if (this->lightDirUBOAllocate < this->RendererLight2->size()) {
+			this->lightDirUBOAllocate = this->RendererLight2->size();
+			VkDeviceSize bufferSize = this->lightDirUBOAllocate * sizeof(_light_dir_data) + sizeof(vec4);
+
+			delete this->lightDirUBOData;
+			this->lightDirUBOData = malloc(bufferSize);
+
+			vkDestroyBuffer(this->context->GetDevice(), this->lightDirUBOBuffer, VK_ALLOCK);
+			vkFreeMemory(this->context->GetDevice(), this->lightDirUBOBufferMemory, VK_ALLOCK);
+			this->context->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->lightDirUBOBuffer, this->lightDirUBOBufferMemory);
+
+			this->lightDirUBOBufferInfo = {
+				this->lightDirUBOBuffer,
+				0,
+				bufferSize
+			};
+
+			this->descriptorUpdate();
+		}
+
+		{
+			*(uint32_t*)(((uint64_t)this->lightDirUBOData + (0))) = this->RendererLight2->size();
+			for (size_t i = 0; i < this->RendererLight2->size(); i++) {
+				_light_dir_data* l = (_light_dir_data*)(((uint64_t)this->lightDirUBOData + (i * sizeof(_light_dir_data) + sizeof(vec4))));
+
+				(*l).pos = vec4(this->RendererLight2->at(i)->tmp_transform->position, 0);
+
+				//(*l).dir = vec4(radians(this->RendererLight2->at(i)->tmp_transform->rotation), 0);
+				mat4 rotX = rotate(glm::radians(this->RendererLight2->at(i)->tmp_transform->rotation.x), vec3(1.0f, 0.0f, 0.0f));
+				mat4 rotY = rotate(glm::radians(this->RendererLight2->at(i)->tmp_transform->rotation.y), vec3(0.0f, 1.0f, 0.0f));
+				mat4 rotZ = rotate(glm::radians(this->RendererLight2->at(i)->tmp_transform->rotation.z), vec3(0.0f, 0.0f, 1.0f));
+				mat4 rotationMatrix = rotX * rotY * rotZ;
+				(*l).dir = rotationMatrix * vec4(0, -1, 0, 1);
+
+				(*l).ambient = vec4(this->RendererLight2->at(i)->ambient, 0);
+				(*l).diffuse = vec4(this->RendererLight2->at(i)->diffuse, 0);
+				(*l).specular = vec4(this->RendererLight2->at(i)->specular, 0);
+			}
+
+			VkDeviceSize bufferSize = this->lightDirUBOAllocate * sizeof(_light_dir_data) + sizeof(vec4);
+			void* data;
+			vkMapMemory(this->context->GetDevice(), this->lightDirUBOBufferMemory, 0, bufferSize, 0, &data);
+			memcpy(data, this->lightDirUBOData, bufferSize);
+			vkUnmapMemory(this->context->GetDevice(), this->lightDirUBOBufferMemory);
 		}
 	}
 

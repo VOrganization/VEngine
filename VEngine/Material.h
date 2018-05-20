@@ -26,13 +26,13 @@ public:
 
 	float opacity;
 
-	vec4 ambient;
+	vec4 ambient = vec4(0.1, 0.1, 0.1, 1.0);
 
 	vec4 diffuse;
 	Texture_2D* diffuseMap;
 
 	vec4 specular;
-	float shininess;
+	float shininess = 32.0;
 	Texture_2D* specularMap;
 
 	vec4 emission;

@@ -73,6 +73,7 @@ void Material::Read(ifstream * f){
 		if (this->type == 0) {
 			f->read((char*)&this->specular, sizeof(vec4));
 			f->read((char*)&this->shininess, 4);
+			this->shininess = 32.0f;
 			f->read(&cc, 1);
 			if (cc == 'O') {
 				this->specularMap = new Texture_2D(f);

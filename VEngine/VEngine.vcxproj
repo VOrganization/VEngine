@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{945F7BEB-BB18-4C2A-B9EF-B5AB5C61C1DD}</ProjectGuid>
-    <RootNamespace>EngineV2</RootNamespace>
+    <RootNamespace>VEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

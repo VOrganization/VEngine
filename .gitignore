@@ -401,3 +401,6 @@ packages/
 *.vshader
 *.glsl
 *.hlsl
+
+!main.vshader
+!main.vscene

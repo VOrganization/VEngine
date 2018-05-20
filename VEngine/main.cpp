@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 	glfwHideWindow(engine->context->window);
 	glfwSetScrollCallback(engine->context->window, window_scroll);
 
-	engine->scene = new Scene("main.scene");
+	engine->scene = new Scene("main.vscene");
 	engine->InitScene();
 
 	ObjectCamera* cam = engine->scene->defaultCamera;
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 	glfwShowWindow(engine->context->window);
 
 	while (engine->IsOpen()) {
-		glfwSetWindowTitle(engine->context->window, string("VKEngineV2 -- " + to_string(engine->window_fps)).c_str());
+		glfwSetWindowTitle(engine->context->window, string("VEngine -- " + to_string(engine->window_fps)).c_str());
 
 		cam->transform->position = vec3(sin(glfwGetTime())*r, 5.0, cos(glfwGetTime())*r);
 		cam->Direction = -cam->transform->position;

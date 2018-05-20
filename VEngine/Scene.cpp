@@ -19,7 +19,7 @@ void Scene::Init(){
 
 	this->default_shader = new Shader();
 	this->default_shader->name = "default_engine_shader";
-	this->default_shader->Load("main2.shader");
+	this->default_shader->Load("main.vshader");
 	//this->default_shader->Load(_strdup(res_default_shader), strlen(res_default_shader));
 
 	this->InitShader(this->default_shader);

@@ -9,6 +9,8 @@ public:
 	vec3 ambient;
 	vec3 specular;
 
+	float intensity;
+
 	void Read(ifstream* f);
 	void Write(ofstream* f);
 };

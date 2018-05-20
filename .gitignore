@@ -401,6 +401,10 @@ packages/
 *.vshader
 *.glsl
 *.hlsl
+*.jpg
+*.png
+*.fbx
 
+# Engine shader
+!main.glsl
 !main.vshader
-!main.vscene

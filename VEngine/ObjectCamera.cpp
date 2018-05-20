@@ -43,6 +43,7 @@ void ObjectCamera::Read(ifstream * f) {
 	f->read((char*)&this->Fov, sizeof(float));
 	f->read((char*)&this->Far, sizeof(float));
 	f->read((char*)&this->Near, sizeof(float));
+	f->read((char*)&this->Zoom, sizeof(float));
 }
 
 // -------------------------------------------------------------------------------------------- //

@@ -43,7 +43,7 @@ void Engine::CalcObject(Object * obj){
 	else {
 		obj->tmp_transform->position = obj->transform->position + this->scene->WorldTransform->position;
 		obj->tmp_transform->rotation = obj->transform->rotation + this->scene->WorldTransform->rotation;
-		obj->tmp_transform->scale = obj->transform->scale * +this->scene->WorldTransform->scale;
+		obj->tmp_transform->scale = obj->transform->scale * + this->scene->WorldTransform->scale;
 	}
 
 	//Obliczanie Animacji z systemu animacji

@@ -52,6 +52,7 @@ void Object::Read(ifstream * f){
 	f->read((char*)&this->display_priority, 4);
 
 	this->transform->Read(f);
+	cout << "Object: " << this->name << ": " << this->transform->rotation.x << "   " << this->transform->rotation.y << "   " << this->transform->rotation.z << "\n";
 
 	/*unsigned int a_s;
 	f->read((char*)&a_s, 4);

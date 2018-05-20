@@ -18,6 +18,7 @@ public:
 	float Fov;
 	float Near;
 	float Far;
+	float Zoom;
 
 	bool Perpective;
 

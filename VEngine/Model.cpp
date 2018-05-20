@@ -115,7 +115,7 @@ void Model::processNode(aiNode * node, const aiScene * scene, Object* o){
 		Object* tmp_obj = new Object();
 		tmp_obj->name = node->mChildren[i]->mName.C_Str();
 
-		tmp_obj->transform = convert_to_transform(&node->mChildren[i]->mTransformation);
+		// tmp_obj->transform = convert_to_transform(&node->mChildren[i]->mTransformation);
 
 		/*bool found = false;
 		for (size_t x = 0; x < this->animations.size(); x++){

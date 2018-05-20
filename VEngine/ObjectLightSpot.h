@@ -9,6 +9,8 @@ public:
 	vec3 ambient;
 	vec3 specular;
 
+	float intensity;
+
 	float constant;
 	float linear;
 	float quadratic;

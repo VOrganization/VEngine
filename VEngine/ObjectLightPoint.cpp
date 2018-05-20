@@ -14,21 +14,13 @@ ObjectLightPoint::~ObjectLightPoint(){ }
 // -------------------------------------------------------------------------------------------- //
 
 void ObjectLightPoint::Read(ifstream * f) {
-	unsigned int name_size;
-	f->read((char*)&name_size, sizeof(unsigned int));
-	char* tmp_name = new char[name_size];
-	f->read(tmp_name, name_size);
-	tmp_name[name_size] = '\0';
-	this->name = tmp_name;
-
-	f->read((char*)&this->display_type, 4);
-	f->read((char*)&this->display_priority, 4);
-
-	this->transform->Read(f);
+	((Object*)this)->Read(f);
 
 	f->read((char*)&this->ambient,  sizeof(vec3));
 	f->read((char*)&this->diffuse,  sizeof(vec3));
 	f->read((char*)&this->specular, sizeof(vec3));
+
+	f->read((char*)&this->intensity, sizeof(float));
 
 	f->read((char*)&this->constant,  sizeof(float));
 	f->read((char*)&this->linear,    sizeof(float));

@@ -471,6 +471,7 @@ void Scene::Load(string path){
 	cout << "Material: " << material_size << "\n";
 	for (unsigned int i = 0; i < material_size; i++){
 		Material* mat = new Material(f);
+		mat->engine_id = i;
 		this->InitMaterial(mat);
 		this->Materials->push_back(mat);
 		cout << "Load Material: " << mat->name << "\n";

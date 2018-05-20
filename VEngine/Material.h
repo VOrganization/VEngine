@@ -22,6 +22,7 @@ public:
 
 	string name;
 	string id;
+	uint32_t engine_id;
 
 	float opacity;
 

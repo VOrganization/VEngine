@@ -27,7 +27,10 @@ typedef struct {
 } _light_dir_data;
 
 typedef struct {
-	vec4 data;
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;
+	vec4 shininess;
 
 } _material_data;
 
@@ -175,6 +178,27 @@ void Engine::descriptorUpdate(){
 
 	}
 
+	VkDescriptorBufferInfo bufferInfo0 = this->matrixUBOBufferInfo;
+	this->descriptorItems->at(0).writer.pBufferInfo = &bufferInfo0;
+
+	VkDescriptorBufferInfo bufferInfo1 = this->matrixDynamicUBOBufferInfo;
+	this->descriptorItems->at(1).writer.pBufferInfo = &bufferInfo1;
+
+	VkDescriptorBufferInfo bufferInfo2 = this->engineUBOBufferInfo;
+	this->descriptorItems->at(2).writer.pBufferInfo = &bufferInfo2;
+
+	VkDescriptorBufferInfo bufferInfo3 = this->materialBufferInfo;
+	this->descriptorItems->at(3).writer.pBufferInfo = &bufferInfo3;
+
+	VkDescriptorBufferInfo bufferInfo4 = this->lightPointUBOBufferInfo;
+	this->descriptorItems->at(4).writer.pBufferInfo = &bufferInfo4;
+
+	VkDescriptorBufferInfo bufferInfo5 = this->lightSpotUBOBufferInfo;
+	this->descriptorItems->at(5).writer.pBufferInfo = &bufferInfo5;
+
+	VkDescriptorBufferInfo bufferInfo6 = this->lightDirUBOBufferInfo;
+	this->descriptorItems->at(6).writer.pBufferInfo = &bufferInfo6;
+
 
 	vector<VkWriteDescriptorSet> descriptorWrites;
 	for (uint32_t i = 0; i < this->descriptorItems->size(); i++) {
@@ -271,7 +295,7 @@ void Engine::VkInit(){
 	{
 
 		size_t minUboAlignment = this->context->GetGpuProperties().limits.minUniformBufferOffsetAlignment;
-		this->matrixDynamicAlignment = sizeof(glm::mat4);
+		this->matrixDynamicAlignment = sizeof(mat4) + sizeof(uint32_t);
 		if (minUboAlignment > 0) {
 			this->matrixDynamicAlignment = (this->matrixDynamicAlignment + minUboAlignment - 1) & ~(minUboAlignment - 1);
 		}
@@ -322,6 +346,8 @@ void Engine::VkInit(){
 		memcpy(data, &this->engineUBOData, bufferSize);
 		vkUnmapMemory(this->context->GetDevice(), this->engineUBOBufferMemory);
 	}
+
+	//texture
 
 	//material
 	{
@@ -400,9 +426,10 @@ void Engine::VkInit(){
 		VkDescriptorBufferInfo bufferInfo0 = this->matrixUBOBufferInfo;
 		VkDescriptorBufferInfo bufferInfo1 = this->matrixDynamicUBOBufferInfo;
 		VkDescriptorBufferInfo bufferInfo2 = this->engineUBOBufferInfo;
-		VkDescriptorBufferInfo bufferInfo3 = this->lightPointUBOBufferInfo;
-		VkDescriptorBufferInfo bufferInfo4 = this->lightSpotUBOBufferInfo;
-		VkDescriptorBufferInfo bufferInfo5 = this->lightDirUBOBufferInfo;
+		VkDescriptorBufferInfo bufferInfo3 = this->materialBufferInfo;
+		VkDescriptorBufferInfo bufferInfo4 = this->lightPointUBOBufferInfo;
+		VkDescriptorBufferInfo bufferInfo5 = this->lightSpotUBOBufferInfo;
+		VkDescriptorBufferInfo bufferInfo6 = this->lightDirUBOBufferInfo;
 
 		//global matrix
 		this->descriptorItems->push_back({
@@ -485,13 +512,13 @@ void Engine::VkInit(){
 			}
 		});
 
-		//light point
+		//material
 		this->descriptorItems->push_back({
 			{
 				3,
 				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 				1,
-				VK_SHADER_STAGE_FRAGMENT_BIT,
+				VK_SHADER_STAGE_VERTEX_BIT,
 				nullptr
 			},
 			{
@@ -510,9 +537,9 @@ void Engine::VkInit(){
 				&bufferInfo3,
 				nullptr,
 			}
-		});
+			});
 
-		//light spot
+		//light point
 		this->descriptorItems->push_back({
 			{
 				4,
@@ -539,7 +566,7 @@ void Engine::VkInit(){
 			}
 		});
 
-		//light dir
+		//light spot
 		this->descriptorItems->push_back({
 			{
 				5,
@@ -562,6 +589,33 @@ void Engine::VkInit(){
 				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 				nullptr,
 				&bufferInfo5,
+				nullptr,
+			}
+		});
+
+		//light dir
+		this->descriptorItems->push_back({
+			{
+				6,
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				1,
+				VK_SHADER_STAGE_FRAGMENT_BIT,
+				nullptr
+			},
+			{
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				1
+			},
+			{
+				VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				nullptr,
+				0,
+				6,
+				0,
+				1,
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+				nullptr,
+				&bufferInfo6,
 				nullptr,
 			}
 		});
@@ -718,35 +772,21 @@ void Engine::Update(){
 			vkFreeMemory(this->context->GetDevice(), this->matrixDynamicUBOBufferMemory, VK_ALLOCK);
 			this->context->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->matrixDynamicUBOBuffer, this->matrixDynamicUBOBufferMemory);
 
-			VkDescriptorBufferInfo bufferInfo0 = this->matrixUBOBufferInfo;
-			this->descriptorItems->at(0).writer.pBufferInfo = &bufferInfo0;
-
 			this->matrixDynamicUBOBufferInfo = {
 				this->matrixDynamicUBOBuffer,
 				0,
 				this->matrixDynamicAlignment
 			};
-			VkDescriptorBufferInfo bufferInfo1 = this->matrixDynamicUBOBufferInfo;
-			this->descriptorItems->at(1).writer.pBufferInfo = &bufferInfo1;
-
-			VkDescriptorBufferInfo bufferInfo2 = this->engineUBOBufferInfo;
-			this->descriptorItems->at(2).writer.pBufferInfo = &bufferInfo2;
-
-			VkDescriptorBufferInfo bufferInfo3 = this->lightPointUBOBufferInfo;
-			this->descriptorItems->at(3).writer.pBufferInfo = &bufferInfo3;
-
-			VkDescriptorBufferInfo bufferInfo4 = this->lightSpotUBOBufferInfo;
-			this->descriptorItems->at(4).writer.pBufferInfo = &bufferInfo4;
-
-			VkDescriptorBufferInfo bufferInfo5 = this->lightDirUBOBufferInfo;
-			this->descriptorItems->at(5).writer.pBufferInfo = &bufferInfo5;
-
+			
 			this->descriptorUpdate();
 		}
 
 		for (size_t i = 0; i < this->RendererMeshes->size(); i++) {
-			mat4* modelMat = (mat4*)(((uint64_t)this->matrixDynamicUBOData + (i * this->matrixDynamicAlignment)));
-			*modelMat = this->RendererMeshes->at(i)->tmp_transform->GetMatrix();
+			mat4* matrix = (mat4*)(((uint64_t)this->matrixDynamicUBOData + (i * this->matrixDynamicAlignment)));
+			*matrix = this->RendererMeshes->at(i)->tmp_transform->GetMatrix();
+
+			uint32_t* material = (uint32_t*)(((uint64_t)this->matrixDynamicUBOData + (i * this->matrixDynamicAlignment) + sizeof(mat4)));
+			*material = this->RendererMeshes->at(i)->material->engine_id;
 		}
 
 		{
@@ -768,6 +808,50 @@ void Engine::Update(){
 		}
 	}
 
+	//Calc material data
+	{
+		if (this->materialAllocate < this->scene->Materials->size()) {
+			this->materialAllocate = this->scene->Materials->size();
+
+			VkDeviceSize bufferSize = this->materialAllocate * sizeof(_material_data) + sizeof(vec4);
+
+			delete this->materialData;
+			this->materialData = malloc(bufferSize);
+
+			vkDestroyBuffer(this->context->GetDevice(), this->materialBuffer, VK_ALLOCK);
+			vkFreeMemory(this->context->GetDevice(), this->materialBufferMemory, VK_ALLOCK);
+			this->context->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->materialBuffer, this->materialBufferMemory);
+
+			this->materialBufferInfo = {
+				this->materialBuffer,
+				0,
+				bufferSize
+			};
+
+			this->descriptorUpdate();
+		}
+
+		{
+			VkDeviceSize bufferSize = this->materialAllocate * sizeof(_material_data) + sizeof(vec4);
+
+			uint32_t* size = (uint32_t*)(((uint64_t)this->materialData + (0)));
+			*size = this->materialAllocate;
+			for (size_t i = 0; i < this->scene->Materials->size(); i++) {
+				_material_data* m = (_material_data*)(((uint64_t)this->materialData + (i * sizeof(_material_data) + sizeof(vec4))));
+				
+				m->ambient = this->scene->Materials->at(i)->ambient;
+				m->diffuse = this->scene->Materials->at(i)->diffuse;
+				m->specular = this->scene->Materials->at(i)->specular;
+				m->shininess.x = this->scene->Materials->at(i)->shininess;
+			}
+
+			void* data;
+			vkMapMemory(this->context->GetDevice(), this->materialBufferMemory, 0, bufferSize, 0, &data);
+			memcpy(data, this->materialData, bufferSize);
+			vkUnmapMemory(this->context->GetDevice(), this->materialBufferMemory);
+		}
+	}
+
 	//Calc light point data
 	{
 		if (this->lightPointUBOAllocate < this->RendererLight0->size()) {
@@ -781,28 +865,11 @@ void Engine::Update(){
 			vkFreeMemory(this->context->GetDevice(), this->lightPointUBOBufferMemory, VK_ALLOCK);
 			this->context->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->lightPointUBOBuffer, this->lightPointUBOBufferMemory);
 
-			VkDescriptorBufferInfo bufferInfo0 = this->matrixUBOBufferInfo;
-			this->descriptorItems->at(0).writer.pBufferInfo = &bufferInfo0;
-
-			VkDescriptorBufferInfo bufferInfo1 = this->matrixDynamicUBOBufferInfo;
-			this->descriptorItems->at(1).writer.pBufferInfo = &bufferInfo1;
-
-			VkDescriptorBufferInfo bufferInfo2 = this->engineUBOBufferInfo;
-			this->descriptorItems->at(2).writer.pBufferInfo = &bufferInfo2;
-
 			this->lightPointUBOBufferInfo = {
 				this->lightPointUBOBuffer,
 				0,
 				bufferSize
 			};
-			VkDescriptorBufferInfo bufferInfo3 = this->lightPointUBOBufferInfo;
-			this->descriptorItems->at(3).writer.pBufferInfo = &bufferInfo3;
-
-			VkDescriptorBufferInfo bufferInfo4 = this->lightSpotUBOBufferInfo;
-			this->descriptorItems->at(4).writer.pBufferInfo = &bufferInfo4;
-
-			VkDescriptorBufferInfo bufferInfo5 = this->lightDirUBOBufferInfo;
-			this->descriptorItems->at(5).writer.pBufferInfo = &bufferInfo5;
 
 			this->descriptorUpdate();
 		}
@@ -842,28 +909,11 @@ void Engine::Update(){
 			vkFreeMemory(this->context->GetDevice(), this->lightSpotUBOBufferMemory, VK_ALLOCK);
 			this->context->createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, this->lightSpotUBOBuffer, this->lightSpotUBOBufferMemory);
 
-			VkDescriptorBufferInfo bufferInfo0 = this->matrixUBOBufferInfo;
-			this->descriptorItems->at(0).writer.pBufferInfo = &bufferInfo0;
-
-			VkDescriptorBufferInfo bufferInfo1 = this->matrixDynamicUBOBufferInfo;
-			this->descriptorItems->at(1).writer.pBufferInfo = &bufferInfo1;
-
-			VkDescriptorBufferInfo bufferInfo2 = this->engineUBOBufferInfo;
-			this->descriptorItems->at(2).writer.pBufferInfo = &bufferInfo2;
-
-			VkDescriptorBufferInfo bufferInfo3 = this->lightPointUBOBufferInfo;
-			this->descriptorItems->at(3).writer.pBufferInfo = &bufferInfo3;
-
 			this->lightSpotUBOBufferInfo = {
 				this->lightSpotUBOBuffer,
 				0,
 				bufferSize
 			};
-			VkDescriptorBufferInfo bufferInfo4 = this->lightSpotUBOBufferInfo;
-			this->descriptorItems->at(4).writer.pBufferInfo = &bufferInfo4;
-
-			VkDescriptorBufferInfo bufferInfo5 = this->lightDirUBOBufferInfo;
-			this->descriptorItems->at(5).writer.pBufferInfo = &bufferInfo5;
 
 			this->descriptorUpdate();
 		}

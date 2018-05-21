@@ -25,6 +25,7 @@ public:
 	vec3 scale;
 
 	mat4 GetMatrix();
+	vec3 GetDirection(vec3 from);
 
 	void Read(ifstream* f);
 	void Write(ofstream* f);

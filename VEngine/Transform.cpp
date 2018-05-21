@@ -42,10 +42,24 @@ mat4 Transform::GetMatrix() {
 
 // -------------------------------------------------------------------------------------------- //
 
+vec3 Transform::GetDirection(vec3 from){
+	mat4 rotX = rotate(glm::radians(this->rotation.x), vec3(1.0f, 0.0f, 0.0f));
+	mat4 rotY = rotate(glm::radians(this->rotation.y), vec3(0.0f, 1.0f, 0.0f));
+	mat4 rotZ = rotate(glm::radians(this->rotation.z), vec3(0.0f, 0.0f, 1.0f));
+	vec4 d = (rotX * rotY * rotZ) * vec4(from, 0);
+	return vec3(d.x, d.y, d.z);
+}
+
+// -------------------------------------------------------------------------------------------- //
+
 void Transform::Read(ifstream * f){
 	f->read((char*)&this->position, sizeof(vec3));
 	f->read((char*)&this->rotation, sizeof(vec3));
 	f->read((char*)&this->scale, sizeof(vec3));
+
+	/*float tmp = this->rotation.y;
+	this->rotation.y = this->rotation.z;
+	this->rotation.z = -tmp;*/
 }
 
 // -------------------------------------------------------------------------------------------- //

@@ -24,6 +24,7 @@ typedef struct {
 	vec4 ambient;
 	vec4 diffuse;
 	vec4 specular;
+	vec4 intensity;
 } _light_dir_data;
 
 typedef struct {
@@ -31,7 +32,6 @@ typedef struct {
 	vec4 diffuse;
 	vec4 specular;
 	vec4 shininess;
-
 } _material_data;
 
 // -------------------------------------------------------------------------------------------- //
@@ -885,7 +885,7 @@ void Engine::Update(){
 				(*l).ambient = vec4(this->RendererLight0->at(i)->ambient, 0);
 				(*l).diffuse = vec4(this->RendererLight0->at(i)->diffuse, 0);
 				(*l).specular = vec4(this->RendererLight0->at(i)->specular, 0);
-				(*l).distance = vec4(this->RendererLight0->at(i)->constant, this->RendererLight0->at(i)->linear, this->RendererLight0->at(i)->quadratic, 0);
+				(*l).distance = vec4(this->RendererLight0->at(i)->constant, this->RendererLight0->at(i)->linear, this->RendererLight0->at(i)->quadratic, this->RendererLight0->at(i)->intensity);
 			}
 
 			void* data;
@@ -924,11 +924,11 @@ void Engine::Update(){
 			for (size_t i = 0; i < this->RendererLight1->size(); i++) {
 				_light_spot_data* l = (_light_spot_data*)(((uint64_t)this->lightSpotUBOData + (i * sizeof(_light_spot_data) + sizeof(vec4))));
 				(*l).pos = vec4(this->RendererLight1->at(i)->tmp_transform->position, 0);
-				(*l).dir = vec4(radians(this->RendererLight1->at(i)->tmp_transform->rotation), 0);
+				(*l).dir = vec4(this->RendererLight2->at(i)->tmp_transform->GetDirection(vec3(0, 1, 0)), 0);
 				(*l).ambient = vec4(this->RendererLight1->at(i)->ambient, 0);
 				(*l).diffuse = vec4(this->RendererLight1->at(i)->diffuse, 0);
 				(*l).specular = vec4(this->RendererLight1->at(i)->specular, 0);
-				(*l).distance = vec4(this->RendererLight1->at(i)->constant, this->RendererLight0->at(i)->linear, this->RendererLight0->at(i)->quadratic, 0);
+				(*l).distance = vec4(this->RendererLight1->at(i)->constant, this->RendererLight0->at(i)->linear, this->RendererLight0->at(i)->quadratic, this->RendererLight0->at(i)->intensity);
 				(*l).spot = vec4(this->RendererLight1->at(i)->cutOff, this->RendererLight1->at(i)->outerCutOff, 0, 0);
 			}
 
@@ -966,19 +966,12 @@ void Engine::Update(){
 			*(uint32_t*)(((uint64_t)this->lightDirUBOData + (0))) = this->RendererLight2->size();
 			for (size_t i = 0; i < this->RendererLight2->size(); i++) {
 				_light_dir_data* l = (_light_dir_data*)(((uint64_t)this->lightDirUBOData + (i * sizeof(_light_dir_data) + sizeof(vec4))));
-
 				(*l).pos = vec4(this->RendererLight2->at(i)->tmp_transform->position, 0);
-
-				//(*l).dir = vec4(radians(this->RendererLight2->at(i)->tmp_transform->rotation), 0);
-				mat4 rotX = rotate(glm::radians(this->RendererLight2->at(i)->tmp_transform->rotation.x), vec3(1.0f, 0.0f, 0.0f));
-				mat4 rotY = rotate(glm::radians(this->RendererLight2->at(i)->tmp_transform->rotation.y), vec3(0.0f, 1.0f, 0.0f));
-				mat4 rotZ = rotate(glm::radians(this->RendererLight2->at(i)->tmp_transform->rotation.z), vec3(0.0f, 0.0f, 1.0f));
-				mat4 rotationMatrix = rotX * rotY * rotZ;
-				(*l).dir = rotationMatrix * vec4(0, -1, 0, 1);
-
+				(*l).dir = vec4(this->RendererLight2->at(i)->tmp_transform->GetDirection(vec3(0, -1, 0)), 0);
 				(*l).ambient = vec4(this->RendererLight2->at(i)->ambient, 0);
 				(*l).diffuse = vec4(this->RendererLight2->at(i)->diffuse, 0);
 				(*l).specular = vec4(this->RendererLight2->at(i)->specular, 0);
+				(*l).intensity.x = this->RendererLight2->at(i)->intensity;
 			}
 
 			VkDeviceSize bufferSize = this->lightDirUBOAllocate * sizeof(_light_dir_data) + sizeof(vec4);

@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
 
 	glfwShowWindow(engine->context->window);
 
+
 	while (engine->IsOpen()) {
 		glfwSetWindowTitle(engine->context->window, string("VEngine -- " + to_string(engine->window_fps)).c_str());
 
